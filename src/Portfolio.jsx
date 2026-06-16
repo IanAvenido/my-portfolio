@@ -124,8 +124,60 @@ function Stripes({ side = "right", opacity = 0.5 }) {
 /* ─── CERT TYPE BADGE COLOR ─────────────────────── */
 const certColor = { Certification: "#F5C518", Completion: "#4CAF50", Attendance: "#2196F3", Participation: "#9C27B0", Training: "#FF5722" };
 
+/* ─── LOADING SCREEN ────────────────────────────── */
+function LoadingScreen({ onDone }) {
+  const [fade, setFade] = useState(false);
+  useEffect(() => {
+    const t1 = setTimeout(() => setFade(true), 2200);
+    const t2 = setTimeout(() => onDone(), 2800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: DARK,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      opacity: fade ? 0 : 1,
+      transition: "opacity 0.6s ease",
+      pointerEvents: fade ? "none" : "all",
+    }}>
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "repeating-linear-gradient(168deg,#1a1a1a 0px,#1a1a1a 4px,transparent 4px,transparent 18px)",
+        opacity: 0.45,
+      }} />
+      <div style={{ position: "relative", textAlign: "center" }}>
+        <div style={{ width: 0, height: 3, background: ACCENT, margin: "0 auto 28px", animation: "ldLine 0.7s ease 0.2s forwards" }} />
+        <p style={{ color: ACCENT, fontSize: 10, fontWeight: 700, letterSpacing: 6, textTransform: "uppercase", marginBottom: 20, opacity: 0, animation: "ldUp 0.5s ease 0.4s forwards" }}>
+          Portfolio
+        </p>
+        <h1 style={{ fontSize: "clamp(2rem, 8vw, 4.5rem)", fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: -2, opacity: 0, animation: "ldUp 0.6s ease 0.6s forwards" }}>
+          KEIRK IAN<br /><span style={{ color: ACCENT }}>V. AVENIDO</span>
+        </h1>
+        <p style={{ color: MUTED, fontSize: 12, letterSpacing: 3, textTransform: "uppercase", marginTop: 18, opacity: 0, animation: "ldUp 0.5s ease 0.9s forwards" }}>
+          Computer Engineer
+        </p>
+        <div style={{ width: 0, height: 3, background: ACCENT, margin: "28px auto 0", animation: "ldLine 0.7s ease 0.2s forwards" }} />
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 40, opacity: 0, animation: "ldUp 0.5s ease 1.1s forwards" }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width: 7, height: 7, background: ACCENT, borderRadius: "50%", animation: `ldPulse 1s ease ${i * 0.2}s infinite` }} />
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @keyframes ldLine  { from { width: 0 } to { width: 60px } }
+        @keyframes ldUp    { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes ldPulse { 0%,100% { opacity:.3; transform:scale(.8) } 50% { opacity:1; transform:scale(1.2) } }
+      `}</style>
+    </div>
+  );
+}
+
 /* ─── MAIN COMPONENT ────────────────────────────── */
 export default function Portfolio() {
+  const [loading, setLoading]             = useState(true);
   const [menuOpen, setMenuOpen]           = useState(false);
   const [scrolled, setScrolled]           = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
@@ -143,9 +195,9 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = showCertModal ? "hidden" : "";
+    document.body.style.overflow = (showCertModal || loading) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [showCertModal]);
+  }, [showCertModal, loading]);
 
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -174,6 +226,8 @@ export default function Portfolio() {
       fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
       minHeight: "100vh", overflowX: "hidden",
     }}>
+
+      {loading && <LoadingScreen onDone={() => setLoading(false)} />}
 
       {/* ── CERTIFICATE MODAL ── */}
       {showCertModal && (
@@ -715,6 +769,9 @@ export default function Portfolio() {
         * { box-sizing: border-box; }
         body { margin: 0; }
         input::placeholder, textarea::placeholder { color: #555; }
+        @keyframes ldLine  { from { width: 0 } to { width: 60px } }
+        @keyframes ldUp    { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes ldPulse { 0%,100% { opacity:.3; transform:scale(.8) } 50% { opacity:1; transform:scale(1.2) } }
         @media (max-width: 720px) {
           .nav-links { display: none !important; }
           .hamburger { display: block !important; }

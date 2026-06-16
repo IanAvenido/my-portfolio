@@ -13,11 +13,11 @@ const MUTED  = "#888888";
 const NAV_LINKS = ["About", "Skills", "Projects", "Certifications", "Contact"];
 
 const SKILLS = [
-  { name: "Python",       level: 85 },
-  { name: "C++",          level: 80 },
-  { name: "Java",         level: 75 },
-  { name: "MATLAB",       level: 78 },
-  { name: "Computer Vision", level: 82 },
+  { name: "Python",           level: 85 },
+  { name: "C++",              level: 80 },
+  { name: "Java",             level: 75 },
+  { name: "MATLAB",           level: 78 },
+  { name: "Computer Vision",  level: 82 },
   { name: "Machine Learning", level: 80 },
 ];
 
@@ -56,11 +56,74 @@ const CERTIFICATIONS = [
 ];
 
 const WHY = [
-  ["Hardware", "Hands-On Electronics", "Hands-on experience troubleshooting circuit boards, ICs, and shields in a live production environment."],
+  ["Hardware", "Hands-On Electronics",   "Hands-on experience troubleshooting circuit boards, ICs, and shields in a live production environment."],
   ["Research", "IEEE Published Author",  "Co-authored a published conference paper on computer vision and embedded systems for agricultural automation."],
   ["Software", "ML & Signal Processing", "Built end-to-end ML pipelines and DSP systems — from raw data to working predictions."],
   ["Growth",   "Always Learning",        "OpenCV Bootcamp, Prompt Engineering, Data Science — continuously expanding my skill set."],
 ];
+
+/* ─── LOADING SCREEN ─────────────────────────────── */
+function LoadingScreen({ done }) {
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setFadeOut(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: DARK,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      opacity: fadeOut ? 0 : 1,
+      pointerEvents: fadeOut ? "none" : "all",
+      transition: "opacity 0.8s ease",
+    }}
+      onTransitionEnd={() => { if (fadeOut) done(); }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <p style={{
+          color: ACCENT, fontSize: 11, fontWeight: 700,
+          letterSpacing: 6, textTransform: "uppercase", marginBottom: 20,
+        }}>
+          Welcome to my portfolio
+        </p>
+        <h1 style={{
+          fontSize: "clamp(2.5rem, 8vw, 5rem)", fontWeight: 900,
+          color: WHITE, margin: 0, letterSpacing: -2, lineHeight: 1,
+        }}>
+          KEIRK IAN<br />
+          <span style={{ color: ACCENT }}>AVENIDO</span>
+        </h1>
+        <p style={{
+          color: MUTED, fontSize: 13, letterSpacing: 3,
+          textTransform: "uppercase", marginTop: 20,
+        }}>
+          Computer Engineer
+        </p>
+        {/* Loading bar */}
+        <div style={{
+          marginTop: 48, width: 200, height: 2,
+          background: MID, borderRadius: 2, overflow: "hidden",
+          margin: "48px auto 0",
+        }}>
+          <div style={{
+            height: "100%", background: ACCENT,
+            animation: "loadbar 1.6s ease forwards",
+          }} />
+        </div>
+      </div>
+      <style>{`
+        @keyframes loadbar {
+          from { width: 0%; }
+          to   { width: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 /* ─── HELPERS ───────────────────────────────────── */
 function useInView(threshold = 0.15) {
@@ -102,8 +165,9 @@ function Stripes({ side = "right", opacity = 0.5 }) {
 
 /* ─── MAIN COMPONENT ────────────────────────────── */
 export default function Portfolio() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [scrolled,  setScrolled]  = useState(false);
+  const [loading,   setLoading]   = useState(true);
 
   const [skillsRef,  skillsVisible]  = useInView();
   const [projRef,    projVisible]    = useInView();
@@ -122,6 +186,28 @@ export default function Portfolio() {
     setMenuOpen(false);
   };
 
+  const handleDownloadResume = () => {
+    const link = document.createElement("a");
+    link.href = "/KEIRK_IAN_AVENIDO_RESUME.pdf";
+    link.download = "Keirk_Ian_Avenido_Resume.pdf";
+    link.click();
+  };
+
+  const handleEmail = () => {
+    window.location.href = "mailto:keirkian09s@gmail.com";
+  };
+
+  const handleSendMessage = () => {
+    const name    = document.getElementById("contact-name")?.value?.trim();
+    const email   = document.getElementById("contact-email")?.value?.trim();
+    const message = document.getElementById("contact-message")?.value?.trim();
+    if (!name || !email || !message) {
+      alert("Please fill in all fields before sending.");
+      return;
+    }
+    window.location.href = `mailto:keirkian09s@gmail.com?subject=Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}%0A%0AFrom: ${encodeURIComponent(email)}`;
+  };
+
   const eyebrow = {
     color: ACCENT, fontSize: 10, fontWeight: 700,
     letterSpacing: 4, textTransform: "uppercase", marginBottom: 8,
@@ -132,381 +218,428 @@ export default function Portfolio() {
   };
 
   return (
-    <div style={{
-      background: DARK, color: WHITE,
-      fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
-      minHeight: "100vh", overflowX: "hidden",
-    }}>
+    <>
+      {loading && <LoadingScreen done={() => setLoading(false)} />}
 
-      {/* ── NAV ── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-        height: 64, display: "flex", alignItems: "center",
-        justifyContent: "space-between", padding: "0 6vw",
-        background: scrolled ? "rgba(17,17,17,0.96)" : "transparent",
-        borderBottom: scrolled ? `1px solid ${MID}` : "none",
-        backdropFilter: scrolled ? "blur(10px)" : "none",
-        transition: "background 0.3s, border 0.3s",
+      <div style={{
+        background: DARK, color: WHITE,
+        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        minHeight: "100vh", overflowX: "hidden",
+        opacity: loading ? 0 : 1, transition: "opacity 0.5s ease",
       }}>
-        <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: 2, color: ACCENT }}>
-          &lt;KEIRK/&gt;
-        </span>
 
-        <div style={{ display: "flex", gap: 32, alignItems: "center" }} className="nav-links">
-          {NAV_LINKS.map((l) => (
-            <button key={l} onClick={() => scrollTo(l.toLowerCase())}
-              style={{
-                background: "none", border: "none", color: WHITE,
-                cursor: "pointer", fontSize: 12, fontWeight: 600,
-                letterSpacing: 2, textTransform: "uppercase", padding: 0,
-              }}
-              onMouseEnter={(e) => (e.target.style.color = ACCENT)}
-              onMouseLeave={(e) => (e.target.style.color = WHITE)}>
-              {l}
-            </button>
-          ))}
-          <button onClick={() => scrollTo("contact")}
-            style={{
-              background: ACCENT, color: DARK, border: "none",
-              padding: "8px 22px", fontWeight: 800, fontSize: 11,
-              letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
-            }}
-            onMouseEnter={(e) => (e.target.style.opacity = 0.85)}
-            onMouseLeave={(e) => (e.target.style.opacity = 1)}>
-            Hire Me
-          </button>
-        </div>
-
-        <button onClick={() => setMenuOpen(!menuOpen)} className="hamburger"
-          style={{ display: "none", background: "none", border: "none", color: WHITE, fontSize: 22, cursor: "pointer" }}>
-          {menuOpen ? "✕" : "☰"}
-        </button>
-      </nav>
-
-      {menuOpen && (
-        <div style={{
-          position: "fixed", top: 64, left: 0, right: 0, zIndex: 199,
-          background: "#141414", padding: "28px 6vw",
-          display: "flex", flexDirection: "column", gap: 24,
-          borderBottom: `1px solid ${MID}`,
+        {/* ── NAV ── */}
+        <nav style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+          height: 64, display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "0 6vw",
+          background: scrolled ? "rgba(17,17,17,0.96)" : "transparent",
+          borderBottom: scrolled ? `1px solid ${MID}` : "none",
+          backdropFilter: scrolled ? "blur(10px)" : "none",
+          transition: "background 0.3s, border 0.3s",
         }}>
-          {NAV_LINKS.map((l) => (
-            <button key={l} onClick={() => scrollTo(l.toLowerCase())}
-              style={{
-                background: "none", border: "none", color: WHITE,
-                fontSize: 18, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0,
-              }}>
-              {l}
-            </button>
-          ))}
-        </div>
-      )}
+          <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: 2, color: ACCENT }}>
+            Ian
+          </span>
 
-      {/* ── HERO ── */}
-      <section id="about" style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column",
-        justifyContent: "center", padding: "120px 6vw 80px",
-        position: "relative", overflow: "hidden",
-      }}>
-        <Stripes side="right" opacity={0.55} />
-        <div style={{ position: "relative", maxWidth: 720 }}>
-          <p style={eyebrow}>Computer Engineering · Portfolio</p>
-          <h1 style={{
-            fontSize: "clamp(2.4rem, 7vw, 5.5rem)", fontWeight: 900,
-            lineHeight: 0.95, margin: "0 0 8px", letterSpacing: -2,
-          }}>
-            KEIRK IAN<br /><span style={{ color: ACCENT }}>AVENIDO</span>
-          </h1>
-          <p style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.5rem)", color: MUTED,
-            fontWeight: 400, marginTop: 16, marginBottom: 0, letterSpacing: 1,
-          }}>
-            Computer Engineer · ML & Embedded Systems
-          </p>
-          <p style={{ marginTop: 32, color: "#AAA", fontSize: 16, lineHeight: 1.85, maxWidth: 520 }}>
-            BS Computer Engineering graduate from National University Laguna with hands-on experience
-            in machine learning, computer vision, signal processing, and embedded systems.
-            IEEE published co-author. Driven to build systems that solve real problems.
-          </p>
-          <div style={{ display: "flex", gap: 14, marginTop: 44, flexWrap: "wrap" }}>
-            <button onClick={() => scrollTo("projects")}
-              style={{
-                background: ACCENT, color: DARK, border: "none",
-                padding: "14px 36px", fontWeight: 900, fontSize: 12,
-                letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
-                transition: "transform 0.15s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}>
-              View Projects
-            </button>
+          <div style={{ display: "flex", gap: 32, alignItems: "center" }} className="nav-links">
+            {NAV_LINKS.map((l) => (
+              <button key={l} onClick={() => scrollTo(l.toLowerCase())}
+                style={{
+                  background: "none", border: "none", color: WHITE,
+                  cursor: "pointer", fontSize: 12, fontWeight: 600,
+                  letterSpacing: 2, textTransform: "uppercase", padding: 0,
+                }}
+                onMouseEnter={(e) => (e.target.style.color = ACCENT)}
+                onMouseLeave={(e) => (e.target.style.color = WHITE)}>
+                {l}
+              </button>
+            ))}
             <button onClick={() => scrollTo("contact")}
               style={{
-                background: "transparent", color: WHITE,
-                border: `1px solid ${MID}`, padding: "14px 36px",
-                fontWeight: 600, fontSize: 12, letterSpacing: 2,
-                cursor: "pointer", textTransform: "uppercase", transition: "border-color 0.2s",
+                background: ACCENT, color: DARK, border: "none",
+                padding: "8px 22px", fontWeight: 800, fontSize: 11,
+                letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = ACCENT)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = MID)}>
-              Get In Touch
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.85)}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}>
+              Hire Me
             </button>
           </div>
-          <div style={{ marginTop: 72, display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 32, fontWeight: 900, color: ACCENT }}>2022</span>
-            <span style={{ color: "#444", fontSize: 11, letterSpacing: 3, textTransform: "uppercase" }}>
-              — Engineering since
-            </span>
-          </div>
-        </div>
-      </section>
 
-      {/* ── SKILLS ── */}
-      <section id="skills" ref={skillsRef} style={{ padding: "90px 6vw", background: GRAY }}>
-        <div style={{
-          maxWidth: 1100, margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "60px 80px",
-        }}>
-          <div>
-            <p style={eyebrow}>What I Know</p>
-            <h2 style={sectionTitle}>Technical Skills</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-              {SKILLS.map((s) => (
-                <div key={s.name}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{s.name}</span>
-                    <span style={{ fontSize: 12, color: ACCENT, fontWeight: 700 }}>{s.level}%</span>
-                  </div>
-                  <SkillBar level={s.level} visible={skillsVisible} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <p style={eyebrow}>About Me</p>
-            <h2 style={sectionTitle}>Who I Am</h2>
-            <p style={{ color: MUTED, lineHeight: 1.9, fontSize: 15, marginTop: 0 }}>
-              Fresh Computer Engineering graduate with a passion for embedded systems, machine
-              learning, and computer vision. I thrive at the intersection of hardware and software —
-              from circuit-level troubleshooting to training neural networks.
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 36 }}>
-              {[["4+","Projects Built"],["1","IEEE Publication"],["4","Certifications"],["2026","Graduate"]].map(([n, l]) => (
-                <div key={l} style={{ borderLeft: `3px solid ${ACCENT}`, paddingLeft: 16 }}>
-                  <div style={{ fontSize: 30, fontWeight: 900, color: ACCENT }}>{n}</div>
-                  <div style={{ fontSize: 11, color: MUTED, letterSpacing: 1, marginTop: 2 }}>{l}</div>
-                </div>
-              ))}
-            </div>
-            <p style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 3, marginTop: 36, textTransform: "uppercase" }}>
-              Languages — C++ · Python · Java
-            </p>
-          </div>
-        </div>
-      </section>
+          <button onClick={() => setMenuOpen(!menuOpen)} className="hamburger"
+            style={{ display: "none", background: "none", border: "none", color: WHITE, fontSize: 22, cursor: "pointer" }}>
+            {menuOpen ? "✕" : "☰"}
+          </button>
+        </nav>
 
-      {/* ── PROJECTS ── */}
-      <section id="projects" ref={projRef} style={{ padding: "90px 6vw", background: DARK }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={eyebrow}>Selected Work</p>
-          <h2 style={sectionTitle}>My Projects</h2>
+        {menuOpen && (
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 3,
+            position: "fixed", top: 64, left: 0, right: 0, zIndex: 199,
+            background: "#141414", padding: "28px 6vw",
+            display: "flex", flexDirection: "column", gap: 24,
+            borderBottom: `1px solid ${MID}`,
           }}>
-            {PROJECTS.map((p, i) => (
-              <div key={p.title}
+            {NAV_LINKS.map((l) => (
+              <button key={l} onClick={() => scrollTo(l.toLowerCase())}
                 style={{
-                  background: i % 2 === 0 ? CARD : "#282828",
-                  padding: "36px 30px",
-                  borderTop: `3px solid ${i === 0 ? ACCENT : "transparent"}`,
-                  opacity: projVisible ? 1 : 0,
-                  transform: projVisible ? "translateY(0)" : "translateY(28px)",
-                  transition: `opacity 0.55s ${i * 0.12}s, transform 0.55s ${i * 0.12}s, border-color 0.2s`,
-                  cursor: "default",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderTopColor = ACCENT;
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderTopColor = i === 0 ? ACCENT : "transparent";
-                  e.currentTarget.style.transform = "translateY(0)";
+                  background: "none", border: "none", color: WHITE,
+                  fontSize: 18, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0,
                 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
-                  <span style={{ fontSize: 10, color: "#555", fontWeight: 700, letterSpacing: 2 }}>{p.year}</span>
-                  <span style={{ color: ACCENT, fontSize: 18 }}>→</span>
-                </div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.25 }}>{p.title}</h3>
-                <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, margin: "0 0 24px" }}>{p.desc}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {p.tags.map((t) => (
-                    <span key={t} style={{
-                      fontSize: 9, fontWeight: 800, letterSpacing: 1.5,
-                      textTransform: "uppercase", background: DARK,
-                      color: ACCENT, padding: "4px 10px",
-                    }}>{t}</span>
-                  ))}
-                </div>
-              </div>
+                {l}
+              </button>
             ))}
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* ── CERTIFICATIONS ── */}
-      <section id="certifications" ref={certRef} style={{ padding: "90px 6vw", background: ACCENT }}>
-        <div style={{
-          maxWidth: 1100, margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "48px 80px",
+        {/* ── HERO ── */}
+        <section id="about" style={{
+          minHeight: "100vh", display: "flex", flexDirection: "column",
+          justifyContent: "center", padding: "120px 6vw 80px",
+          position: "relative", overflow: "hidden",
         }}>
-          <div>
-            <p style={{ color: DARK, fontSize: 10, fontWeight: 700, letterSpacing: 4, textTransform: "uppercase", marginBottom: 8 }}>
-              Credentials
+          <Stripes side="right" opacity={0.55} />
+          <div style={{ position: "relative", maxWidth: 720 }}>
+            <p style={eyebrow}>Computer Engineering · Portfolio</p>
+            <h1 style={{
+              fontSize: "clamp(2.4rem, 7vw, 5.5rem)", fontWeight: 900,
+              lineHeight: 0.95, margin: "0 0 8px", letterSpacing: -2,
+            }}>
+              KEIRK IAN<br /><span style={{ color: ACCENT }}>AVENIDO</span>
+            </h1>
+            <p style={{
+              fontSize: "clamp(1rem, 2.5vw, 1.5rem)", color: MUTED,
+              fontWeight: 400, marginTop: 16, marginBottom: 0, letterSpacing: 1,
+            }}>
+              Computer Engineer · ML &amp; Embedded Systems
             </p>
-            <h2 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 900, color: DARK, margin: "0 0 24px", lineHeight: 1.05 }}>
-              Certifications<br />&amp; Training
+            <p style={{ marginTop: 32, color: "#AAA", fontSize: 16, lineHeight: 1.85, maxWidth: 520 }}>
+              BS Computer Engineering graduate from National University Manila with hands-on experience
+              in machine learning, computer vision, signal processing, and embedded systems.
+              IEEE published co-author. Driven to build systems that solve real problems.
+            </p>
+            <div style={{ display: "flex", gap: 14, marginTop: 44, flexWrap: "wrap" }}>
+              <button onClick={() => scrollTo("projects")}
+                style={{
+                  background: ACCENT, color: DARK, border: "none",
+                  padding: "14px 36px", fontWeight: 900, fontSize: 12,
+                  letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
+                  transition: "transform 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}>
+                View Projects
+              </button>
+              <button onClick={handleDownloadResume}
+                style={{
+                  background: "transparent", color: WHITE,
+                  border: `1px solid ${MID}`, padding: "14px 36px",
+                  fontWeight: 600, fontSize: 12, letterSpacing: 2,
+                  cursor: "pointer", textTransform: "uppercase", transition: "border-color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = ACCENT)}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = MID)}>
+                Download Resume
+              </button>
+            </div>
+            <div style={{ marginTop: 72, display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ fontSize: 32, fontWeight: 900, color: ACCENT }}>2022</span>
+              <span style={{ color: "#444", fontSize: 11, letterSpacing: 3, textTransform: "uppercase" }}>
+                — Engineering since
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SKILLS ── */}
+        <section id="skills" ref={skillsRef} style={{ padding: "90px 6vw", background: GRAY }}>
+          <div style={{
+            maxWidth: 1100, margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "60px 80px",
+          }}>
+            <div>
+              <p style={eyebrow}>What I Know</p>
+              <h2 style={sectionTitle}>Technical Skills</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+                {SKILLS.map((s) => (
+                  <div key={s.name}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{s.name}</span>
+                      <span style={{ fontSize: 12, color: ACCENT, fontWeight: 700 }}>{s.level}%</span>
+                    </div>
+                    <SkillBar level={s.level} visible={skillsVisible} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              <p style={eyebrow}>About Me</p>
+              <h2 style={sectionTitle}>Who I Am</h2>
+              <p style={{ color: MUTED, lineHeight: 1.9, fontSize: 15, marginTop: 0 }}>
+                Fresh Computer Engineering graduate with a passion for embedded systems, machine
+                learning, and computer vision. I thrive at the intersection of hardware and software —
+                from circuit-level troubleshooting to training neural networks.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 36 }}>
+                {[["4+","Projects Built"],["1","IEEE Publication"],["4","Certifications"],["2026","Graduate"]].map(([n, l]) => (
+                  <div key={l} style={{ borderLeft: `3px solid ${ACCENT}`, paddingLeft: 16 }}>
+                    <div style={{ fontSize: 30, fontWeight: 900, color: ACCENT }}>{n}</div>
+                    <div style={{ fontSize: 11, color: MUTED, letterSpacing: 1, marginTop: 2 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 3, marginTop: 36, textTransform: "uppercase" }}>
+                Languages — C++ · Python · Java
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PROJECTS ── */}
+        <section id="projects" ref={projRef} style={{ padding: "90px 6vw", background: DARK }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <p style={eyebrow}>Selected Work</p>
+            <h2 style={sectionTitle}>My Projects</h2>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 3,
+            }}>
+              {PROJECTS.map((p, i) => (
+                <div key={p.title}
+                  style={{
+                    background: i % 2 === 0 ? CARD : "#282828",
+                    padding: "36px 30px",
+                    borderTop: `3px solid ${i === 0 ? ACCENT : "transparent"}`,
+                    opacity: projVisible ? 1 : 0,
+                    transform: projVisible ? "translateY(0)" : "translateY(28px)",
+                    transition: `opacity 0.55s ${i * 0.12}s, transform 0.55s ${i * 0.12}s, border-top-color 0.2s`,
+                    cursor: "default",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderTopColor = ACCENT;
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderTopColor = i === 0 ? ACCENT : "transparent";
+                    e.currentTarget.style.transform = projVisible ? "translateY(0)" : "translateY(28px)";
+                  }}>
+                  <div style={{ marginBottom: 18 }}>
+                    <span style={{ fontSize: 10, color: "#555", fontWeight: 700, letterSpacing: 2 }}>{p.year}</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.25 }}>{p.title}</h3>
+                  <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, margin: "0 0 24px" }}>{p.desc}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {p.tags.map((t) => (
+                      <span key={t} style={{
+                        fontSize: 9, fontWeight: 800, letterSpacing: 1.5,
+                        textTransform: "uppercase", background: DARK,
+                        color: ACCENT, padding: "4px 10px",
+                      }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CERTIFICATIONS ── */}
+        <section id="certifications" ref={certRef} style={{ padding: "90px 6vw", background: ACCENT }}>
+          <div style={{
+            maxWidth: 1100, margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "48px 80px",
+          }}>
+            <div>
+              <p style={{ color: DARK, fontSize: 10, fontWeight: 700, letterSpacing: 4, textTransform: "uppercase", marginBottom: 8 }}>
+                Credentials
+              </p>
+              <h2 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 900, color: DARK, margin: "0 0 24px", lineHeight: 1.05 }}>
+                Certifications<br />&amp; Training
+              </h2>
+              <p style={{ color: "#333", fontSize: 15, lineHeight: 1.85 }}>
+                Formal recognition of skills across technical, process, and safety disciplines —
+                backed by hands-on experience and continuous professional development.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 22, justifyContent: "center" }}>
+              {CERTIFICATIONS.map((c, i) => (
+                <div key={c.label} style={{
+                  display: "flex", alignItems: "center", gap: 16,
+                  opacity: certVisible ? 1 : 0,
+                  transform: certVisible ? "translateX(0)" : "translateX(24px)",
+                  transition: `opacity 0.5s ${i * 0.12}s, transform 0.5s ${i * 0.12}s`,
+                }}>
+                  <div style={{ width: 7, height: 7, background: DARK, flexShrink: 0 }} />
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: DARK, letterSpacing: 2, textTransform: "uppercase" }}>
+                      {c.label}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#555", marginLeft: 12 }}>{c.sub}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── WHY CHOOSE ME ── */}
+        <section ref={whyRef} style={{ padding: "90px 6vw", background: GRAY, position: "relative", overflow: "hidden" }}>
+          <Stripes side="left" opacity={0.4} />
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+            <p style={eyebrow}>The Case</p>
+            <h2 style={sectionTitle}>Why Choose Me?</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32 }}>
+              {WHY.map(([n, title, desc], i) => (
+                <div key={n} style={{
+                  borderTop: `1px solid ${MID}`, paddingTop: 24,
+                  opacity: whyVisible ? 1 : 0,
+                  transform: whyVisible ? "none" : "translateY(20px)",
+                  transition: `opacity 0.5s ${i * 0.1}s, transform 0.5s ${i * 0.1}s`,
+                }}>
+                  <div style={{ fontSize: 10, color: ACCENT, fontWeight: 900, letterSpacing: 3, marginBottom: 12, textTransform: "uppercase" }}>{n}</div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 10px" }}>{title}</h3>
+                  <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, margin: 0 }}>{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CONTACT ── */}
+        <section id="contact" ref={contactRef} style={{ padding: "90px 6vw 110px", background: DARK }}>
+          <div style={{
+            maxWidth: 600, margin: "0 auto", textAlign: "center",
+            opacity: contactVisible ? 1 : 0,
+            transform: contactVisible ? "none" : "translateY(24px)",
+            transition: "opacity 0.65s, transform 0.65s",
+          }}>
+            <p style={eyebrow}>Get In Touch</p>
+            <h2 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 900, margin: "0 0 16px", lineHeight: 1.1 }}>
+              Let's Build<br />Something Great
             </h2>
-            <p style={{ color: "#333", fontSize: 15, lineHeight: 1.85 }}>
-              Formal recognition of skills across technical, process, and safety disciplines —
-              backed by hands-on experience and continuous professional development.
+            <p style={{ color: MUTED, fontSize: 15, lineHeight: 1.85, marginBottom: 16 }}>
+              Open to full-time roles, internships, and research collaborations.
             </p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 22, justifyContent: "center" }}>
-            {CERTIFICATIONS.map((c, i) => (
-              <div key={c.label} style={{
-                display: "flex", alignItems: "center", gap: 16,
-                opacity: certVisible ? 1 : 0,
-                transform: certVisible ? "translateX(0)" : "translateX(24px)",
-                transition: `opacity 0.5s ${i * 0.12}s, transform 0.5s ${i * 0.12}s`,
-              }}>
-                <div style={{ width: 7, height: 7, background: DARK, flexShrink: 0 }} />
-                <div>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: DARK, letterSpacing: 2, textTransform: "uppercase" }}>
-                    {c.label}
-                  </span>
-                  <span style={{ fontSize: 12, color: "#555", marginLeft: 12 }}>{c.sub}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY CHOOSE ME ── */}
-      <section ref={whyRef} style={{ padding: "90px 6vw", background: GRAY, position: "relative", overflow: "hidden" }}>
-        <Stripes side="left" opacity={0.4} />
-        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
-          <p style={eyebrow}>The Case</p>
-          <h2 style={sectionTitle}>Why Choose Me?</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32 }}>
-            {WHY.map(([n, title, desc], i) => (
-              <div key={n} style={{
-                borderTop: `1px solid ${MID}`, paddingTop: 24,
-                opacity: whyVisible ? 1 : 0,
-                transform: whyVisible ? "none" : "translateY(20px)",
-                transition: `opacity 0.5s ${i * 0.1}s, transform 0.5s ${i * 0.1}s`,
-              }}>
-                <div style={{ fontSize: 10, color: ACCENT, fontWeight: 900, letterSpacing: 3, marginBottom: 12, textTransform: "uppercase" }}>{n}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 10px" }}>{title}</h3>
-                <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, margin: 0 }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CONTACT ── */}
-      <section id="contact" ref={contactRef} style={{ padding: "90px 6vw 110px", background: DARK }}>
-        <div style={{
-          maxWidth: 600, margin: "0 auto", textAlign: "center",
-          opacity: contactVisible ? 1 : 0,
-          transform: contactVisible ? "none" : "translateY(24px)",
-          transition: "opacity 0.65s, transform 0.65s",
-        }}>
-          <p style={eyebrow}>Get In Touch</p>
-          <h2 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 900, margin: "0 0 16px", lineHeight: 1.1 }}>
-            Let's Build<br />Something Great
-          </h2>
-          <p style={{ color: MUTED, fontSize: 15, lineHeight: 1.85, marginBottom: 16 }}>
-            Open to full-time roles, internships, and research collaborations.
-          </p>
-          <div style={{ marginBottom: 40, display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={{ color: "#AAA", fontSize: 14, margin: 0 }}>📍 San Pablo City, Laguna</p>
-            <p style={{ color: "#AAA", fontSize: 14, margin: 0 }}>📞 +63 9277306698</p>
-            <p style={{ color: ACCENT, fontSize: 14, margin: 0 }}>✉️ keirkian09s@gmail.com</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
-            {[{ placeholder: "Your Name", type: "text" }, { placeholder: "Your Email", type: "email" }].map(({ placeholder, type }) => (
-              <input key={placeholder} type={type} placeholder={placeholder}
+            <div style={{ marginBottom: 40, display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{ color: "#AAA", fontSize: 14, margin: 0 }}>📍 San Pablo City, Laguna</p>
+              <p style={{ color: "#AAA", fontSize: 14, margin: 0 }}>📞 +63 9277306698</p>
+              <a href="mailto:keirkian09s@gmail.com"
+                style={{ color: ACCENT, fontSize: 14, margin: 0, textDecoration: "none" }}>
+                ✉️ keirkian09s@gmail.com
+              </a>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
+              <input
+                id="contact-name"
+                type="text"
+                placeholder="Your Name"
                 style={{
                   background: CARD, border: `1px solid ${MID}`, color: WHITE,
                   padding: "14px 18px", fontSize: 14, outline: "none",
                   fontFamily: "inherit", width: "100%", boxSizing: "border-box",
                 }}
                 onFocus={(e) => (e.target.style.borderColor = ACCENT)}
-                onBlur={(e)  => (e.target.style.borderColor = MID)} />
-            ))}
-            <textarea placeholder="Tell me about your project or opportunity..." rows={5}
-              style={{
-                background: CARD, border: `1px solid ${MID}`, color: WHITE,
-                padding: "14px 18px", fontSize: 14, outline: "none",
-                resize: "vertical", fontFamily: "inherit",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = ACCENT)}
-              onBlur={(e)  => (e.target.style.borderColor = MID)} />
-            <button style={{
-              background: ACCENT, color: DARK, border: "none",
-              padding: "16px", fontWeight: 900, fontSize: 12,
-              letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
-              transition: "opacity 0.2s",
-            }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.85)}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}>
-              Send Message
-            </button>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 36, marginTop: 60, flexWrap: "wrap" }}>
-            {["GitHub", "LinkedIn", "Email"].map((s) => (
-              <button key={s} style={{
-                background: "none", border: "none", color: "#555",
-                cursor: "pointer", fontSize: 11, fontWeight: 700,
-                letterSpacing: 2, textTransform: "uppercase",
-              }}
+                onBlur={(e)  => (e.target.style.borderColor = MID)}
+              />
+              <input
+                id="contact-email"
+                type="email"
+                placeholder="Your Email"
+                style={{
+                  background: CARD, border: `1px solid ${MID}`, color: WHITE,
+                  padding: "14px 18px", fontSize: 14, outline: "none",
+                  fontFamily: "inherit", width: "100%", boxSizing: "border-box",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = ACCENT)}
+                onBlur={(e)  => (e.target.style.borderColor = MID)}
+              />
+              <textarea
+                id="contact-message"
+                placeholder="Tell me about your project or opportunity..."
+                rows={5}
+                style={{
+                  background: CARD, border: `1px solid ${MID}`, color: WHITE,
+                  padding: "14px 18px", fontSize: 14, outline: "none",
+                  resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", width: "100%",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = ACCENT)}
+                onBlur={(e)  => (e.target.style.borderColor = MID)}
+              />
+              <button onClick={handleSendMessage}
+                style={{
+                  background: ACCENT, color: DARK, border: "none",
+                  padding: "16px", fontWeight: 900, fontSize: 12,
+                  letterSpacing: 2, cursor: "pointer", textTransform: "uppercase",
+                  transition: "opacity 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.85)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}>
+                Send Message
+              </button>
+            </div>
+
+            {/* Social Links */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 36, marginTop: 60, flexWrap: "wrap" }}>
+              <a href="https://github.com/" target="_blank" rel="noreferrer"
+                style={{
+                  background: "none", border: "none", color: "#555",
+                  cursor: "pointer", fontSize: 11, fontWeight: 700,
+                  letterSpacing: 2, textTransform: "uppercase", textDecoration: "none",
+                }}
                 onMouseEnter={(e) => (e.target.style.color = ACCENT)}
                 onMouseLeave={(e) => (e.target.style.color = "#555")}>
-                {s}
-              </button>
-            ))}
+                GitHub
+              </a>
+              <a href="https://linkedin.com/" target="_blank" rel="noreferrer"
+                style={{
+                  background: "none", border: "none", color: "#555",
+                  cursor: "pointer", fontSize: 11, fontWeight: 700,
+                  letterSpacing: 2, textTransform: "uppercase", textDecoration: "none",
+                }}
+                onMouseEnter={(e) => (e.target.style.color = ACCENT)}
+                onMouseLeave={(e) => (e.target.style.color = "#555")}>
+                LinkedIn
+              </a>
+              <a href="mailto:keirkian09s@gmail.com"
+                style={{
+                  background: "none", border: "none", color: "#555",
+                  cursor: "pointer", fontSize: 11, fontWeight: 700,
+                  letterSpacing: 2, textTransform: "uppercase", textDecoration: "none",
+                }}
+                onMouseEnter={(e) => (e.target.style.color = ACCENT)}
+                onMouseLeave={(e) => (e.target.style.color = "#555")}>
+                Email
+              </a>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── FOOTER ── */}
-      <footer style={{
-        borderTop: `1px solid ${MID}`, padding: "22px 6vw",
-        display: "flex", justifyContent: "space-between",
-        alignItems: "center", flexWrap: "wrap", gap: 12,
-      }}>
-        <span style={{ color: ACCENT, fontWeight: 900, fontSize: 14, letterSpacing: 2 }}>&lt;KEIRK/&gt;</span>
-        <span style={{ color: "#444", fontSize: 12 }}>© {new Date().getFullYear()} Keirk Ian V. Avenido. All rights reserved.</span>
-      </footer>
+        {/* ── FOOTER ── */}
+        <footer style={{
+          borderTop: `1px solid ${MID}`, padding: "22px 6vw",
+          display: "flex", justifyContent: "space-between",
+          alignItems: "center", flexWrap: "wrap", gap: 12,
+        }}>
+          <span style={{ color: ACCENT, fontWeight: 900, fontSize: 14, letterSpacing: 2 }}>Ian</span>
+          <span style={{ color: "#444", fontSize: 12 }}>© {new Date().getFullYear()} Keirk Ian V. Avenido. All rights reserved.</span>
+        </footer>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; }
-        input::placeholder, textarea::placeholder { color: #555; }
-        @media (max-width: 720px) {
-          .nav-links  { display: none !important; }
-          .hamburger  { display: block !important; }
-        }
-      `}</style>
-    </div>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+          * { box-sizing: border-box; }
+          body { margin: 0; }
+          input::placeholder, textarea::placeholder { color: #555; }
+          @media (max-width: 720px) {
+            .nav-links  { display: none !important; }
+            .hamburger  { display: block !important; }
+          }
+        `}</style>
+      </div>
+    </>
   );
 }
